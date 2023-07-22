@@ -1,0 +1,24 @@
+<?php
+namespace App\Http\Controllers\Categories\Requests;
+
+use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Contracts\Validation\Validator;
+
+
+class CreateCategoryRequest extends FormRequest {
+    public function authorize() {
+        return true;
+    }
+
+    public function rules() {
+        return [
+            "name" => ['required'],
+            "color" => ['required'],
+        ];
+    }
+
+    public function failedValidation(Validator $validator) {
+        throw new HttpResponseException(response()->json($validator->errors()), 422);
+    }
+}

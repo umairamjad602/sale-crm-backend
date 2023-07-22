@@ -76,4 +76,8 @@ class Controller extends BaseController
     protected function getWebUser($request) {
         return $request->user()->id;
     }
+
+    protected function getCompanyId() {
+        return auth()->user()->company_id;
+    }
 }

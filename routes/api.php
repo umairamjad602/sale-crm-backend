@@ -2,13 +2,8 @@
 
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Categories\CategoriesController;
-use App\Http\Controllers\Geo\PostalCodes\PostalCodeController;
 use App\Http\Controllers\leads\LeadsController;
 use App\Http\Controllers\Options\FieldOptionsController;
-use App\Http\Controllers\RemoteAreas\RemoteAreasController;
-use App\Http\Controllers\Shipments\Models\Shipment;
-use App\Http\Controllers\Shipments\ShipmentsController;
-use App\Http\Controllers\Tracking\TrackingController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -43,7 +38,7 @@ Route::group(['prefix' => 'categories'] ,function ($router) {
     Route::get('fetch', [CategoriesController::class, 'index']);
     Route::post('store', [CategoriesController::class, 'store']);
     Route::post('update', [CategoriesController::class, 'update']);
-    Route::get('show/{id}', [CategoriesController::class, 'show']);
+    Route::get('delete/{id}', [CategoriesController::class, 'destory']);
 });
 
 // Leads
@@ -55,19 +50,7 @@ Route::group(['prefix' => 'leads'] ,function ($router) {
     Route::get('delete', [LeadsController::class, 'destroy']);
 });
 
-// Shipments
-Route::group(['prefix' => 'shipment'], function ($router) {
-    Route::post('create', [ShipmentsController::class, 'store']);
-    Route::get('pdf/{id}', [ShipmentsController::class, 'getPDF']);
-    Route::get('', [ShipmentsController::class, 'index']);
-    Route::get('get-serial-number', [ShipmentsController::class, 'getSerialNumber']);
-});
 
-// Lookup
-Route::group((['prefix' => 'lookup']), function ($router) {
-    Route::get('postal-code', [PostalCodeController::class, 'postalcodeLookup']);
-    Route::get('countries', [PostalCodeController::class, 'fetchCountries']);
-});
 
 // Field Options
 Route::group((['prefix' => 'field-options']), function ($router) {
@@ -89,12 +72,3 @@ Route::group(['prefix' => 'media'], function ($router) {
 Route::group(['prefix' => 'products'], function ($router) {
     // Route::post('create', )
 });
-
-Route::group(['prefix' => 'tracking'], function ($router) {
-    Route::post('create', [TrackingController::class, 'store']);
-    Route::get('delete/{id}', [TrackingController::class, 'deleteTracking']);
-});
-
-Route::post('validate-remote-area', [RemoteAreasController::class, 'validateRemoteArea']);
-Route::get('services', [RemoteAreasController::class, 'getServiceAPI']);
-Route::get('open/tracking/{serialNumber}', [TrackingController::class, 'getTracking']);
