@@ -25,8 +25,9 @@ class CategoriesController extends Controller {
 
     public function store(CreateCategoryRequest $request) {
         try {
+            $payload = $request->all();
+            $payload['company_id'] = $this->getCompanyId();
             $this->model_->fill($request->all());
-            $this->model_->company_id = $this->getCompanyId();
             $this->model_->created_by = $this->getUserID();
             if($this->model_->save()) {
                 return $this->HttpOk(['message' => 'Category Created']);
