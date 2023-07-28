@@ -27,6 +27,7 @@ class CategoriesController extends Controller {
         try {
             $payload = $request->all();
             $payload['company_id'] = $this->getCompanyId();
+            dd($this->getCompanyId());
             $this->model_->fill($request->all());
             $this->model_->created_by = $this->getUserID();
             if($this->model_->save()) {
