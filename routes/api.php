@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Categories\CategoriesController;
+use App\Http\Controllers\Customers\CustomersController;
 use App\Http\Controllers\leads\LeadsController;
 use App\Http\Controllers\Options\FieldOptionsController;
 use App\Http\Controllers\Products\ProductsController;
@@ -73,4 +74,9 @@ Route::group(['prefix' => 'media'], function ($router) {
 Route::group(['prefix' => 'products'], function ($router) {
     Route::post('create', [ProductsController::class, 'store']);
     Route::get('list', [ProductsController::class, 'index']);
+});
+
+Route::group(['prefix' => 'customers'], function ($router) {
+    Route::post('create', [CustomersController::class, 'store']);
+    Route::get('list', [CustomersController::class, 'index']);
 });

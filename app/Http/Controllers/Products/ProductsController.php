@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Controllers\Products\Models\Product;
 use App\Http\Controllers\Products\Requests\CreateProductRequest;
 use Exception;
+use Illuminate\Http\Request;
 
 class ProductsController extends Controller {
 
@@ -28,9 +29,16 @@ class ProductsController extends Controller {
         }
     }
 
-    public function index() {
+    public function index(Request $request) {
         try {
-            $results = $this->model_->with('category')->where('company_id',  $this->getCompanyId())->latest()->get();
+            $query = $this->model_->with('category')->where('company_id',  $this->getCompanyId());
+            if($request->has('name')) {
+                $query->where('name', 'like', '%'.$request->name.'%');
+            }
+            if($request->has('per_page')) {
+                $query->take($request->per_page);
+            }
+            $results = $query->latest()->get();
             return $this->HttpOk(['products' => $results]);
         } catch (Exception $ex) {
             return $this->serverError($ex);
