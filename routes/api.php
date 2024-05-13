@@ -74,6 +74,7 @@ Route::group(['prefix' => 'media'], function ($router) {
 Route::group(['prefix' => 'products'], function ($router) {
     Route::post('create', [ProductsController::class, 'store']);
     Route::get('list', [ProductsController::class, 'index']);
+    Route::post('update', [ProductsController::class, 'update']);
 });
 
 Route::group(['prefix' => 'customers'], function ($router) {

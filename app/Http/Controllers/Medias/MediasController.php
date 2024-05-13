@@ -6,17 +6,16 @@ use Exception;
 use App\Http\Services\MediaService;
 use Illuminate\Support\Facades\File;
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Medias\Requests\UploadMediaRequest;
 use Illuminate\Support\Facades\Response;
 use App\Http\Controllers\Medias\Models\Media as ThisModel;
-use App\Http\Services\UserService;
 use App\Http\Controllers\Medias\Models\MediaDirectory;
 use App\Http\Controllers\Medias\Requests\CreateMediaDirectoryRequest;
-use App\Http\Controllers\Documents\Requests\UploadMediaRequest;
 use Illuminate\Support\Facades\Storage;
 
 class MediasController extends Controller
 {
-    const MEDIA_DIRECTORY_CREATED = 'Directory has been created successfully';
+    const MEDIA_DIRECTORY_HttpOk = 'Directory has been HttpOk successfully';
     const MODULE = 'Medias';
     const UPLOAD = 'Upload';
     const LIST_DIRECTORY = 'List Directory';
@@ -24,9 +23,10 @@ class MediasController extends Controller
     const UPDATE_DIRECTORY = 'Update Directory';
     const DELETE_DIRECTORY = 'Delete Directory';
     private $mediaService_ = NULL;
-    public function __construct(ThisModel $model, UserService $userService, MediaService $mediaService)
+    public function __construct(ThisModel $model, MediaService $mediaService)
     {
-        parent::__construct($model, $userService);
+        // parent::__construct($model);
+        $this->model_ = $model;
         $this->mediaService_ = $mediaService;
     }
 
@@ -41,11 +41,11 @@ class MediasController extends Controller
     public function upload(UploadMediaRequest $request)
     {
         try {
-            // I have commented this because this belongs to its child module 
+            // I have commented this because this belongs to its child module
             // if(!$this->userService->isUserAllowedTo($this->userId(),MediasController::MODULE.'.'.MediasController::UPLOAD))
             //     return $this->notAllowed(["message" => MediasController::UNAUTHORIZED]);
             $media = $this->mediaService_->saveMedia('file', $request);
-            return $this->created(['message' => MediasController::RECORD_CREATED, 'media' => $media]);
+            return $this->HttpOk(['message' => MediasController::DATA_ADDED, 'media' => $media]);
         } catch (Exception $ex) {
             return $this->serverError($ex);
         }
@@ -79,11 +79,9 @@ class MediasController extends Controller
     public function storeDirectory(CreateMediaDirectoryRequest $request)
     {
         try {
-            if (!$this->userService->isUserAllowedTo($this->userId(), MediasController::MODULE . '.' . MediasController::CREATE_DIRECTORY))
-                return $this->notAllowed(["message" => MediasController::UNAUTHORIZED]);
             $directoryName = $request->get('directory_name');
-            if ($this->createDirectory($directoryName)) {
-                return $this->created(['message' => MediasController::MEDIA_DIRECTORY_CREATED]);
+            if ($this->HttpOkirectory($directoryName)) {
+                return $this->HttpOk(['message' => MediasController::MEDIA_DIRECTORY_HttpOk]);
             }
         } catch (Exception $ex) {
             return $this->serverError($ex);
@@ -93,16 +91,14 @@ class MediasController extends Controller
     public function listDirectories()
     {
         try {
-            if (!$this->userService->isUserAllowedTo($this->userId(), MediasController::MODULE . '.' . MediasController::LIST_DIRECTORY))
-                return $this->notAllowed(["message" => MediasController::UNAUTHORIZED]);
             $directories = $this->mediaDirectoryModel_->orderBy($this->getSortBy(), $this->getSort())->paginate($this->getPerPage());
-            return $this->created(['directories' => $directories]);
+            return $this->HttpOk(['directories' => $directories]);
         } catch (Exception $ex) {
             return $this->serverError($ex);
         }
     }
 
-    public function createDirectory(string $directoryName)
+    public function HttpOkirectory(string $directoryName)
     {
         $nameOnDrive = $directoryName . "_" . $this->userId();
         if (!Storage::has($this->getDrivePath($nameOnDrive))) {
@@ -110,7 +106,7 @@ class MediasController extends Controller
                 $mediaDirectory =  new MediaDirectory();
                 $mediaDirectory->name = $directoryName;
                 $mediaDirectory->location = $nameOnDrive;
-                $mediaDirectory->created_by = $this->userId();
+                $mediaDirectory->HttpOk_by = $this->userId();
                 return $mediaDirectory->save();
             }
 
@@ -122,12 +118,10 @@ class MediasController extends Controller
     public function destroyMedia($id)
     {
         try {
-            if (!$this->userService->isUserAllowedTo($this->userId(), MediasController::MODULE . '.' . MediasController::DELETE))
-                return $this->notAllowed(["message" => MediasController::UNAUTHORIZED]);
             if ($this->delete($id)) {
-                return $this->created(['message' => MediasController::RECORD_DELETED]);
+                return $this->HttpOk(['message' => MediasController::DATA_DELETED]);
             }
-            return $this->noRecord(['message' => MediasController::RECORD_NOT_FOUND]);
+            return $this->noRecord(['message' => MediasController::DATA_NOT_FOUND]);
         } catch (\Illuminate\Database\QueryException $ex) {
             return $this->serverSQLError($ex);
         } catch (Exception $ex) {
@@ -138,8 +132,6 @@ class MediasController extends Controller
     public function destroyDirectory($id)
     {
         try {
-            if (!$this->userService->isUserAllowedTo($this->userId(), MediasController::MODULE . '.' . MediasController::DELETE_DIRECTORY))
-                return $this->notAllowed(["message" => MediasController::UNAUTHORIZED]);
             $directory = $this->findDirectoryById($id);
             if ($directory) {
                 $mediasInDirectory = $this->mediaService_->fetchMediaByMediaDirectoryId($directory->id);
@@ -153,11 +145,11 @@ class MediasController extends Controller
 
                 if (Storage::disk('public')->move($this->getDrivePath($directory->location, true), $this->getDrivePath($directory->location, true) . "_deleted")) {
                     if ($directory->delete()) {
-                        return $this->created(['message' => MediasController::RECORD_DELETED]);
+                        return $this->HttpOk(['message' => MediasController::DATA_DELETED]);
                     }
                 }
             }
-            return $this->noRecord(['message' => MediasController::RECORD_NOT_FOUND]);
+            return $this->noRecord(['message' => MediasController::DATA_NOT_FOUND]);
         } catch (\Illuminate\Database\QueryException $ex) {
             return $this->serverSQLError($ex);
         } catch (Exception $ex) {
@@ -168,20 +160,16 @@ class MediasController extends Controller
 
     public function getMediaForEntity(int $moduleId, int $relationId)
     {
-        if (!$this->userService->isUserAllowedTo($this->userId(), MediasController::MODULE . '.' . MediasController::VIEW))
-            return $this->notAllowed(["message" => MediasController::UNAUTHORIZED]);
         $filters = request()->all();
         $media = $this->mediaService_->fetchMediaByEntity($moduleId, $relationId, $filters, $this->getSortBy(), $this->getSort(), $this->getPerPage());
-        return $this->created(['media' => $media]);
+        return $this->HttpOk(['media' => $media]);
     }
 
     public function getMedia()
     {
-        if (!$this->userService->isUserAllowedTo($this->userId(), MediasController::MODULE . '.' . MediasController::LIST))
-            return $this->notAllowed(["message" => MediasController::UNAUTHORIZED]);
         $filters = request()->all();
         $media = $this->mediaService_->fetchMedia($filters, $this->getSortBy(), $this->getSort(), $this->getPerPage());
-        return $this->created(['media' => $media]);
+        return $this->HttpOk(['media' => $media]);
     }
 
     public function serve($filename)
