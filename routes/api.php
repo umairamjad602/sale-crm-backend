@@ -75,6 +75,7 @@ Route::group(['prefix' => 'products'], function ($router) {
     Route::post('create', [ProductsController::class, 'store']);
     Route::get('list', [ProductsController::class, 'index']);
     Route::post('update', [ProductsController::class, 'update']);
+    Route::get('delete/{id}', [ProductsController::class, 'delete']);
 });
 
 Route::group(['prefix' => 'customers'], function ($router) {

@@ -63,4 +63,19 @@ class ProductsController extends Controller {
         }
     }
 
+    public function delete(int $id) {
+        try {
+            $product = $this->model_->find($id);
+            if($product) {
+                if($product->delete()) {
+                    return $this->HttpOk(['message' => 'Product deleted']);
+                }
+            } else {
+                return $this->HttpDataNotFound(['message' => 'Product not found.']);
+            }
+        } catch (Exception $ex) {
+            return $this->serverError($ex);
+        }
+    }
+
 }
